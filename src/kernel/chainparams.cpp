@@ -25,6 +25,20 @@
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
+#include <iostream>
+#include <string>
+
+bool compare_prefix(const std::string& str1, const std::string& str2, size_t num_chars) {
+    // Check if num_chars is greater than the length of either string
+    size_t min_length = std::min(str1.length(), str2.length());
+
+    // Adjust num_chars if it's larger than either string's length to avoid out-of-range errors
+    num_chars = std::min(num_chars, min_length);
+
+    // Compare the first num_chars of both strings
+    return str1.compare(0, num_chars, str2, 0, num_chars) == 0;
+}
+
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
@@ -120,6 +134,55 @@ public:
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 600;
         m_assumed_chain_state_size = 10;
+
+         // If genesis block hash does not match, then generate new genesis hash.
+        if (genesis.GetHash() != consensus.hashGenesisBlock) 
+        {
+            printf("Searching for genesis block...\n");
+            // This will figure out a valid hash and Nonce if you're
+            // creating a different genesis block:
+            // uint256 hashTarget = CBigNum().SetCompact(genesis.nBits).getuint256();
+            // uint256 thash;
+            int nonce = 0;
+            genesis = CreateGenesisBlock(1231006505, nonce, 0x1d00ffff, 1, 50 * COIN);
+            uint256 target = uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
+            std::string targetString = target.ToString().c_str();
+            int i = 0;
+            while(true)
+            {
+                // thash = scrypt_blockhash(BEGIN(genesis.nVersion));
+                // if (thash <= hashTarget)
+                //     break;
+                //genesis = CreateGenesisBlock(1231006505, nonce, 0x1d00ffff, 1, 50 * COIN);
+                uint256 hash = genesis.GetHash(); 
+                
+                if (compare_prefix(hash.ToString().c_str(), targetString, 10))
+                {
+                    //printf("Why'd I break\n");
+                    printf("Target %s\n", target.ToString().c_str());
+                    printf("block.GetHash = %s\n", genesis.GetHash().ToString().c_str());
+                    break;
+                    //printf("nonce %d", genesis.nNonce);
+                    //printf("Hash: ");
+                }
+                if (i % 1000000 == 0) 
+                {
+                    printf("%d ", i);
+                    printf("block.GetHash = %s\n", genesis.GetHash().ToString().c_str());
+                }
+                ++genesis.nNonce;
+                if (genesis.nNonce == 0)
+                {
+                    printf("NONCE WRAPPED, incrementing time\n");
+                    ++genesis.nTime;
+                }
+                i += 1;
+            }
+        }
+        printf("block.nTime = %u \n", genesis.nTime);
+        printf("block.nNonce = %u \n", genesis.nNonce);
+        printf("block.GetHash = %s\n", genesis.GetHash().ToString().c_str());
+        //printf("block.GetHash = %u\n", genesis.GetHash());
 
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
