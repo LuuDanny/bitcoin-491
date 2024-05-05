@@ -127,11 +127,11 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0xbe;
-        pchMessageStart[2] = 0xb4;
-        pchMessageStart[3] = 0xd9;
-        nDefaultPort = 8333;
+        pchMessageStart[0] = 0xaa;
+        pchMessageStart[1] = 0xbb;
+        pchMessageStart[2] = 0xbb;
+        pchMessageStart[3] = 0x08;
+        nDefaultPort = 8422;
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 600;
         m_assumed_chain_state_size = 10;
